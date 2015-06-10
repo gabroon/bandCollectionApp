@@ -1,0 +1,91 @@
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_margin="15dp"
+    android:orientation="vertical" >
+
+    <TextView
+        android:id="@+id/txtStep"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/steps" />
+
+
+    <Spinner
+        android:layout_width="100dp"
+        android:layout_height="40dp"
+        android:layout_below="@id/txtStep"
+        android:layout_alignParentRight="true"
+        android:id="@+id/spinner"
+        android:entries="@array/activities"
+        android:prompt="@string/activity_prompt"></Spinner>
+    <EditText
+        android:layout_width="130dp"
+        android:layout_height="40dp"
+        android:layout_below="@id/txtStep"
+        android:layout_toLeftOf="@id/spinner"
+        android:layout_marginRight="5dp"
+        android:id="@+id/seconds"
+        android:inputType="number"
+        android:hint="Seconds "
+        android:text="2"
+        />
+
+    <Button
+        android:id="@+id/btnStart"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/start"
+        android:layout_below="@id/seconds"/>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_below="@id/btnStart">
+    <TextView
+        android:id="@+id/speedStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="" />
+    <TextView
+        android:id="@+id/AccelerometerStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="" />
+    <TextView
+        android:id="@+id/SecondStatusGyroscope"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="" />
+
+    <TextView
+        android:id="@+id/tempratureStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="" />
+    <TextView
+        android:id="@+id/heartRateStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="" />
+    </LinearLayout>
+    <Button
+        android:id="@+id/btnview"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/view"
+        android:layout_gravity="bottom"
+        android:layout_alignParentBottom="true"
+        />
+    <Button
+        android:id="@+id/btnstop"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/stop"
+        android:layout_gravity="bottom"
+        android:layout_above="@id/btnview"
+        />
+
+</RelativeLayout>
+
