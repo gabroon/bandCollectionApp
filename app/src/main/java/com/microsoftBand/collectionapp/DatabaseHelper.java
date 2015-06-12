@@ -56,4 +56,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         Cursor cursor = DB.query(DATABASE_NAME,columns,null,null,null,null,null);
         return  cursor;
     }
+
+    public void deleteAllData(DatabaseHelper databaseHelper){
+        SQLiteDatabase DB = databaseHelper.getWritableDatabase();
+        DB.delete(DATABASE_NAME,null,null);
+    }
 }
