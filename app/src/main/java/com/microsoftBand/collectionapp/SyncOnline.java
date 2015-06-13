@@ -1,5 +1,7 @@
 package com.microsoftBand.collectionapp;
 
+import android.util.Log;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
@@ -34,10 +36,11 @@ public class SyncOnline {
             httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
             // Execute HTTP Post Request
             HttpResponse response = httpclient.execute(httppost);
+            Log.v("error",""+response );
         } catch (ClientProtocolException e) {
 
         } catch (IOException e) {
-            
+
         }
     }
     public void resetArrayList(){

@@ -18,5 +18,12 @@
     <string-array name="activities">
         <item>cycling</item>
         <item>walking</item>
+        <item>running</item>
+        <item>row machine</item>
+        <item>rope jumping</item>
+        <item>football</item>
+        <item>running indoors</item>
+        <item>on laptop</item>
+        <item>praying</item>
     </string-array>
 </resources>

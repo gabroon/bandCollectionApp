@@ -6,16 +6,22 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.database.Cursor;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.SyncStateContract;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import java.io.IOException;
 
 /**
  * Created by mohamed on 09/06/2015.
@@ -29,9 +35,11 @@ public class ViewInfo extends Activity {
     private TextView loading;
     private Button syncBtn;
     private SyncOnline syncOnline;
-    private String url="http://datacollect.comule.com/saveData.php";
+    private String url="http://www.bloodbank.sd/game/band/saveData.php";
     private Context context;
     private ProgressDialog pd;
+    private Cursor cursor ;
+    private int countOfDataSent=0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,10 +50,10 @@ public class ViewInfo extends Activity {
         titleRow=(TableRow) findViewById(R.id.titleRow);
 //        loading=(TextView) findViewById(R.id.loading);
         databaseHelper =MainActivity.databaseHelper;
-        syncBtn=(Button)findViewById(R.id.syncBtn);
+        syncBtn=(Button) findViewById(R.id.syncBtn);
         syncOnline=new SyncOnline(url);
         context=this;
-        final Cursor cursor = databaseHelper.getInformation(databaseHelper);
+       cursor = databaseHelper.getInformation(databaseHelper);
         //move cursor to the first row
         if(cursor.getCount()!=0) {
             cursor.moveToFirst();
@@ -56,7 +64,18 @@ public class ViewInfo extends Activity {
         syncBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sendDataToOnlineDatabase(cursor);
+                try {
+                    if(isNetworkAvailable()==true){
+                        new syncTask().execute(cursor);
+                    }else{
+                        String text="No internet connection";
+                        int duration=Toast.LENGTH_LONG;
+                        Toast.makeText(context, text, duration).show();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
             }
         });
     }
@@ -76,20 +95,20 @@ public class ViewInfo extends Activity {
         do{
             dataRow = new TableRow(this);
             //accelerometer X
-            prepareTextView(dataCellAccX, dataRow, cursor.getString(0));
+            prepareTextView(dataCellAccX, dataRow, cursor.getString(1));
             //accelerometer Y
-            prepareTextView(dataCellAccY, dataRow, cursor.getString(1));
+            prepareTextView(dataCellAccY, dataRow, cursor.getString(2));
             //accelerometer Z
-            prepareTextView(dataCellAccZ, dataRow, cursor.getString(2));
-            prepareTextView(dataCellGyrX, dataRow, cursor.getString(3));
-            prepareTextView(dataCellGyrY, dataRow, cursor.getString(4));
-            prepareTextView(dataCellGyrZ, dataRow, cursor.getString(5));
-            prepareTextView(temp, dataRow, cursor.getString(6));
-            prepareTextView(heartrate, dataRow, cursor.getString(7));
-            prepareTextView(speed, dataRow, cursor.getString(8));
-            prepareTextView(time, dataRow, cursor.getString(9));
-            prepareTextView(date, dataRow, cursor.getString(10));
-            prepareTextView(label, dataRow, cursor.getString(11));
+            prepareTextView(dataCellAccZ, dataRow, cursor.getString(3));
+            prepareTextView(dataCellGyrX, dataRow, cursor.getString(4));
+            prepareTextView(dataCellGyrY, dataRow, cursor.getString(5));
+            prepareTextView(dataCellGyrZ, dataRow, cursor.getString(6));
+            prepareTextView(temp, dataRow, cursor.getString(7));
+            prepareTextView(heartrate, dataRow, cursor.getString(8));
+            prepareTextView(speed, dataRow, cursor.getString(9));
+            prepareTextView(time, dataRow, cursor.getString(10));
+            prepareTextView(date, dataRow, cursor.getString(11));
+            prepareTextView(label, dataRow, cursor.getString(12));
             dataTable.addView(dataRow);
         }while(cursor.moveToNext());
 
@@ -99,30 +118,37 @@ public class ViewInfo extends Activity {
         if (cursor.getCount() != 0) {
             cursor.moveToFirst();
         do {
-                syncOnline.addValuesToList("accelerometerX", cursor.getString(0));
-                syncOnline.addValuesToList("accelerometerY", cursor.getString(1));
-                syncOnline.addValuesToList("accelerometerZ", cursor.getString(2));
-                syncOnline.addValuesToList("gyroscopeX", cursor.getString(3));
-                syncOnline.addValuesToList("gyroscopeY", cursor.getString(4));
-                syncOnline.addValuesToList("gyroscopeZ", cursor.getString(5));
-                syncOnline.addValuesToList("temprature", cursor.getString(6));
-                syncOnline.addValuesToList("heart_rate", cursor.getString(7));
-                syncOnline.addValuesToList("speed", cursor.getString(8));
-                syncOnline.addValuesToList("time", cursor.getString(9));
-                syncOnline.addValuesToList("date", cursor.getString(10));
-                syncOnline.addValuesToList("label", cursor.getString(11));
-                syncOnline.postData();
+                syncOnline.addValuesToList("accelerometerX", cursor.getString(1));
+                syncOnline.addValuesToList("accelerometerY", cursor.getString(2));
+                syncOnline.addValuesToList("accelerometerZ", cursor.getString(3));
+                syncOnline.addValuesToList("gyroscopeX", cursor.getString(4));
+                syncOnline.addValuesToList("gyroscopeY", cursor.getString(5));
+                syncOnline.addValuesToList("gyroscopeZ", cursor.getString(6));
+                syncOnline.addValuesToList("temprature", cursor.getString(7));
+                syncOnline.addValuesToList("heart_rate", cursor.getString(8));
+                syncOnline.addValuesToList("speed", cursor.getString(9));
+                syncOnline.addValuesToList("time", cursor.getString(10));
+                syncOnline.addValuesToList("date", cursor.getString(11));
+                syncOnline.addValuesToList("label", cursor.getString(12));
+            syncOnline.postData();
+            databaseHelper.deleteByID(databaseHelper, cursor.getString(cursor.getColumnIndex("ROWID")));
+                 Log.d("coloumn Index",""+cursor.getColumnIndex("ROWID"));
+                countOfDataSent++;
             }
             while (cursor.moveToNext()) ;
         }
     }
 
-    public void deleteDataFromDatabase(){
-        databaseHelper.deleteAllData(databaseHelper);
+    public void showDataCount(){
+
+            String text=countOfDataSent+" rows have  been sent  out of "+cursor.getCount();
+            int duration=Toast.LENGTH_LONG;
+            Toast.makeText(context, text, duration).show();
+
     }
 
     private class syncTask extends AsyncTask<Cursor, Void, Void> {
-
+        ProgressDialog pd = new  ProgressDialog(context);
         @Override
         protected Void doInBackground(Cursor... cursor) {
             sendDataToOnlineDatabase(cursor[0]);
@@ -132,12 +158,15 @@ public class ViewInfo extends Activity {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            ProgressDialog pd = new  ProgressDialog(context);
-            pd.setTitle("syncing data with cloud");
-            pd.setMessage("Please wait.");
-            pd.setCancelable(false);
-            pd.setIndeterminate(true);
-            pd.show();
+
+
+
+                pd.setTitle("syncing data with cloud");
+                pd.setMessage("Please wait.");
+                pd.setCancelable(false);
+                pd.setIndeterminate(true);
+                pd.show();
+
         }
 
         @Override
@@ -145,9 +174,27 @@ public class ViewInfo extends Activity {
             super.onPostExecute(aVoid);
             if (pd!=null) {
                 pd.dismiss();
+                showDataCount();
             }
 
         }
 
+    }
+
+    public boolean isNetworkAvailable() throws IOException {
+        int timeout = 3000;
+        ConnectivityManager cm =
+                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo netInfo = cm.getActiveNetworkInfo();
+
+        if(netInfo != null && netInfo.isConnected()){
+//            if (InetAddress.getByName("google.com").isReachable(timeout)) {
+            return true;
+//            } else {
+//                return false;
+//            }
+        }else{
+            return false;
+        }
     }
 }

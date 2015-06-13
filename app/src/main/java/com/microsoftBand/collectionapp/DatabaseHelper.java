@@ -52,7 +52,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public Cursor getInformation(DatabaseHelper databaseHelper){
        SQLiteDatabase DB = databaseHelper.getReadableDatabase();
-        String[] columns = {"accelerometerX","accelerometerY" ,"accelerometerZ", "gyroscopeX" ,"gyroscopeY" ,"gyroscopeZ" ,"temprature" , "heart_rate" ,"speed","time","date","label" };
+        String[] columns = {"ROWID","accelerometerX","accelerometerY" ,"accelerometerZ", "gyroscopeX" ,"gyroscopeY" ,"gyroscopeZ" ,"temprature" , "heart_rate" ,"speed","time","date","label" };
         Cursor cursor = DB.query(DATABASE_NAME,columns,null,null,null,null,null);
         return  cursor;
     }
@@ -60,5 +60,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void deleteAllData(DatabaseHelper databaseHelper){
         SQLiteDatabase DB = databaseHelper.getWritableDatabase();
         DB.delete(DATABASE_NAME,null,null);
+    }
+
+    public void deleteByID(DatabaseHelper databaseHelper,String ID){
+        SQLiteDatabase DB = databaseHelper.getWritableDatabase();
+        DB.execSQL("DELETE FROM "+DATABASE_NAME+" WHERE ROWID="+ID);
+        Log.d("database_delete","ID ="+ID);
     }
 }

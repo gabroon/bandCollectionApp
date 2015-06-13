@@ -1,10 +1,13 @@
 package com.microsoftBand.collectionapp;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
+import android.os.PowerManager;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -52,6 +55,8 @@ public class MainActivity extends Activity implements HeartRateConsentListener{
     public static DatabaseHelper databaseHelper;
     private int intervalInMilliSeconds;
     private String trackedActivity;
+    private PowerManager pm ;
+    private PowerManager.WakeLock wakeLock;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,7 +72,8 @@ public class MainActivity extends Activity implements HeartRateConsentListener{
         speedStatus=(TextView) findViewById(R.id.speedStatus);
         tempratureStatus = (TextView) findViewById(R.id.tempratureStatus);
         heartRateStatus = (TextView) findViewById(R.id.heartRateStatus);
-
+        pm=(PowerManager) getSystemService(Context.POWER_SERVICE);
+        wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,"wake tag");
         databaseHelper=new DatabaseHelper(this);
 
 
@@ -75,6 +81,9 @@ public class MainActivity extends Activity implements HeartRateConsentListener{
         btnStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                wakeLock.acquire();
+                Log.d("Lock","lock acquired");
+                btnViewTable.setEnabled(false);
                 AccelerometerStatus.setText("");
                 //start an asynchronous class that check for the bands connection and connects to it if not connected
                 //get activity label
@@ -82,6 +91,7 @@ public class MainActivity extends Activity implements HeartRateConsentListener{
                 //get seconds
                 intervalInMilliSeconds=Integer.valueOf(intervalForSaving.getText().toString()) * 1000;
                 dThread=new databaseThread(databaseHelper,intervalInMilliSeconds,trackedActivity);
+
                 new appTask().execute();
 
 
@@ -90,21 +100,29 @@ public class MainActivity extends Activity implements HeartRateConsentListener{
         btnStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
+                btnViewTable.setEnabled(true);
                //kill the connection
-
-                try {
-                    client.getSensorManager().unregisterAccelerometerEventListeners();
-                    client.getSensorManager().unregisterDistanceEventListeners();
-                    client.getSensorManager().unregisterGyroscopeEventListeners();
-                    client.getSensorManager().unregisterSkinTemperatureEventListeners();
-                    client.getSensorManager().unregisterHeartRateEventListeners();
-                } catch (BandIOException e) {
-                    e.printStackTrace();
+            if(client!=null) {
+                if (client.isConnected() == true) {
+                    try {
+                        client.getSensorManager().unregisterAccelerometerEventListeners();
+                        client.getSensorManager().unregisterDistanceEventListeners();
+                        client.getSensorManager().unregisterGyroscopeEventListeners();
+                        client.getSensorManager().unregisterSkinTemperatureEventListeners();
+                        client.getSensorManager().unregisterHeartRateEventListeners();
+                    } catch (BandIOException e) {
+                        e.printStackTrace();
+                    }
+                    client.disconnect();
+                    dThread.stopThread();
+                    if (wakeLock.isHeld()) {
+                        wakeLock.release();
+                        Log.d("Lock", "lock released");
+                    }
+                    appendToUI("Band Disconnected");
                 }
-                client.disconnect();
-                dThread.stopThread();
-                appendToUI("Band Disconnected");
-
+            }
             }
         });
         btnViewTable.setOnClickListener(new View.OnClickListener() {
@@ -130,22 +148,23 @@ public class MainActivity extends Activity implements HeartRateConsentListener{
     protected void onPause() {
         super.onPause();
 
-        if (client != null) {
-            try {
-                //unsubscribe from the listnening events
-                client.getSensorManager().unregisterAccelerometerEventListeners();
-                client.getSensorManager().unregisterDistanceEventListeners();
-                client.getSensorManager().unregisterGyroscopeEventListeners();
-                client.getSensorManager().unregisterSkinTemperatureEventListeners();
-                client.getSensorManager().unregisterHeartRateEventListeners();
-            } catch (BandIOException e) {
-                appendToUI(e.getMessage());
-            }
-            dThread.stopThread();
-        }
+//        if (client != null) {
+//            try {
+//                //unsubscribe from the listnening events
+//                client.getSensorManager().unregisterAccelerometerEventListeners();
+//                client.getSensorManager().unregisterDistanceEventListeners();
+//                client.getSensorManager().unregisterGyroscopeEventListeners();
+//                client.getSensorManager().unregisterSkinTemperatureEventListeners();
+//                client.getSensorManager().unregisterHeartRateEventListeners();
+//            } catch (BandIOException e) {
+//                appendToUI(e.getMessage());
+//            }
+//            dThread.stopThread();
+//        }
     }
 
     private class appTask extends AsyncTask<Void, Void, Void> {
+
         @Override
         protected Void doInBackground(Void... params) {
             try {
