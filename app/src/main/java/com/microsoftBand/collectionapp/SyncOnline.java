@@ -20,17 +20,21 @@ import java.util.List;
  */
 public class SyncOnline {
     private String url;
+    HttpClient httpclient;
+    HttpPost httppost;
+
     List<NameValuePair> nameValuePairs;
 //
     public SyncOnline(String url){
         this.url=url;
         nameValuePairs=  new ArrayList<NameValuePair>(2);
+        httpclient = new DefaultHttpClient();
+        httppost = new HttpPost(url);
     }
 
     public void postData() {
         // Create a new HttpClient and Post Header
-        HttpClient httpclient = new DefaultHttpClient();
-        HttpPost httppost = new HttpPost(url);
+
         try {
             // Add your data
             httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));

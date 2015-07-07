@@ -5,108 +5,136 @@
     android:layout_height="match_parent"
     android:scrollbars="vertical"
     xmlns:android="http://schemas.android.com/apk/res/android">
-
-<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:visibility="visible"
-    android:shrinkColumns="1,2,3,4,5,6,7,8,9"
-    android:id="@+id/dataTable">
-
-    <Button
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent">
+        <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Sync with online database"
         android:id="@+id/syncBtn"/>
-
-    <TableRow android:id="@+id/titleRow"
-        android:visibility="visible"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        >
+        <Button
+            android:layout_below="@id/syncBtn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Delete All"
+            android:layout_marginTop="20dp"
+            android:textColor="@color/accent_material_light"
+            android:id="@+id/delete"/>
         <TextView
-            android:background="@drawable/cell_shape"
-            android:text="acc_x"
-            android:padding="2dip"
-            android:textColor="#ffffff"
-             />
-        <TextView
-            android:background="@drawable/cell_shape"
-            android:textColor="#ffffff"
-            android:text="acc_y"
-            android:gravity="left"
-            android:padding="3dip"
-             />
-        <TextView
-            android:background="@drawable/cell_shape"
-            android:textColor="#ffffff"
-            android:text="acc_z"
-            android:gravity="left"
-            android:padding="3dip"
-             />
-        <TextView
-            android:background="@drawable/cell_shape"
-            android:textColor="#ffffff"
-            android:text="gyr_x"
-            android:gravity="left"
-            android:padding="3dip"
-           />
-        <TextView
-            android:background="@drawable/cell_shape"
-            android:textColor="#ffffff"
-            android:text="gyr_y"
-            android:gravity="left"
-            android:padding="3dip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/delete"
+            android:text="0"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="50dp"
+            android:textSize="30dp"
+            android:id="@+id/count_column"
             />
-        <TextView
-            android:background="@drawable/cell_shape"
-            android:textColor="#ffffff"
-            android:text="gyr_z"
-            android:gravity="left"
-            android:padding="3dip"
-           />
-        <TextView
-            android:background="@drawable/cell_shape"
-            android:textColor="#ffffff"
-            android:text="speed"
-            android:gravity="left"
-            android:padding="3dip"
-             />
-        <TextView
-            android:background="@drawable/cell_shape"
-            android:textColor="#ffffff"
-            android:text="temp"
-            android:gravity="left"
-            android:padding="3dip"
-             />
-        <TextView
-            android:background="@drawable/cell_shape"
-            android:textColor="#ffffff"
-            android:text="hr"
-            android:gravity="left"
-            android:padding="3dip" />
-        <TextView
-            android:background="@drawable/cell_shape"
-            android:textColor="#ffffff"
-            android:text="time"
-            android:gravity="left"
-            android:padding="3dip" />
-        <TextView
-            android:background="@drawable/cell_shape"
-            android:textColor="#ffffff"
-            android:text="date"
-            android:gravity="left"
-            android:padding="3dip" />
-        <TextView
-            android:background="@drawable/cell_shape"
-            android:textColor="#ffffff"
-            android:text="label"
-            android:gravity="left"
-            android:padding="3dip" />
-    </TableRow>
 
-
-
-</TableLayout>
-
+    </RelativeLayout>
     </ScrollView>
+
+
+    <!--<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"-->
+    <!--android:layout_width="wrap_content"-->
+    <!--android:layout_height="wrap_content"-->
+    <!--android:visibility="visible"-->
+    <!--android:shrinkColumns="1,2,3,4,5,6,7,8,9"-->
+    <!--android:id="@+id/dataTable">-->
+
+    <!--<Button-->
+    <!--android:layout_width="match_parent"-->
+    <!--android:layout_height="wrap_content"-->
+    <!--android:text="Sync with online database"-->
+    <!--android:id="@+id/syncBtn"/>-->
+
+    <!--<TableRow android:id="@+id/titleRow"-->
+    <!--android:visibility="visible"-->
+    <!--android:layout_width="match_parent"-->
+    <!--android:layout_height="wrap_content"-->
+    <!-->-->
+    <!--<TextView-->
+    <!--android:background="@drawable/cell_shape"-->
+    <!--android:text="acc_x"-->
+    <!--android:padding="2dip"-->
+    <!--android:textColor="#ffffff"-->
+    <!--/>-->
+    <!--<TextView-->
+    <!--android:background="@drawable/cell_shape"-->
+    <!--android:textColor="#ffffff"-->
+    <!--android:text="acc_y"-->
+    <!--android:gravity="left"-->
+    <!--android:padding="3dip"-->
+    <!--/>-->
+    <!--<TextView-->
+    <!--android:background="@drawable/cell_shape"-->
+    <!--android:textColor="#ffffff"-->
+    <!--android:text="acc_z"-->
+    <!--android:gravity="left"-->
+    <!--android:padding="3dip"-->
+    <!--/>-->
+    <!--<TextView-->
+    <!--android:background="@drawable/cell_shape"-->
+    <!--android:textColor="#ffffff"-->
+    <!--android:text="gyr_x"-->
+    <!--android:gravity="left"-->
+    <!--android:padding="3dip"-->
+    <!--/>-->
+    <!--<TextView-->
+    <!--android:background="@drawable/cell_shape"-->
+    <!--android:textColor="#ffffff"-->
+    <!--android:text="gyr_y"-->
+    <!--android:gravity="left"-->
+    <!--android:padding="3dip"-->
+    <!--/>-->
+    <!--<TextView-->
+    <!--android:background="@drawable/cell_shape"-->
+    <!--android:textColor="#ffffff"-->
+    <!--android:text="gyr_z"-->
+    <!--android:gravity="left"-->
+    <!--android:padding="3dip"-->
+    <!--/>-->
+    <!--<TextView-->
+    <!--android:background="@drawable/cell_shape"-->
+    <!--android:textColor="#ffffff"-->
+    <!--android:text="speed"-->
+    <!--android:gravity="left"-->
+    <!--android:padding="3dip"-->
+    <!--/>-->
+    <!--<TextView-->
+    <!--android:background="@drawable/cell_shape"-->
+    <!--android:textColor="#ffffff"-->
+    <!--android:text="temp"-->
+    <!--android:gravity="left"-->
+    <!--android:padding="3dip"-->
+    <!--/>-->
+    <!--<TextView-->
+    <!--android:background="@drawable/cell_shape"-->
+    <!--android:textColor="#ffffff"-->
+    <!--android:text="hr"-->
+    <!--android:gravity="left"-->
+    <!--android:padding="3dip" />-->
+    <!--<TextView-->
+    <!--android:background="@drawable/cell_shape"-->
+    <!--android:textColor="#ffffff"-->
+    <!--android:text="time"-->
+    <!--android:gravity="left"-->
+    <!--android:padding="3dip" />-->
+    <!--<TextView-->
+    <!--android:background="@drawable/cell_shape"-->
+    <!--android:textColor="#ffffff"-->
+    <!--android:text="date"-->
+    <!--android:gravity="left"-->
+    <!--android:padding="3dip" />-->
+    <!--<TextView-->
+    <!--android:background="@drawable/cell_shape"-->
+    <!--android:textColor="#ffffff"-->
+    <!--android:text="label"-->
+    <!--android:gravity="left"-->
+    <!--android:padding="3dip" />-->
+    <!--</TableRow>-->
+
+
+
+    <!--</TableLayout>-->

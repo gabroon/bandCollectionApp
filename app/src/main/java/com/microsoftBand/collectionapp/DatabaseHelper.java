@@ -46,8 +46,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         contentValues.put("date",date);
         contentValues.put("label",label);
         long k =DB.insert(DATABASE_NAME,null,contentValues);
-        Log.d("DATABASE","Row inserted");
-
+//        Log.d("DATABASE","Row inserted time");
     }
 
     public Cursor getInformation(DatabaseHelper databaseHelper){
