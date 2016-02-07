@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_margin="30dp">
+<TextView
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="Sensors :"
+    android:layout_margin="10dp"
+    android:textSize="30dp"/>
+    <CheckBox
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="accelerometer(g units)"
+        android:id="@+id/acc_Ch_box"/>
+    <CheckBox
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="gyroscope(g units)"
+        android:id="@+id/gyroscope_Ch_box"
+        style="@style/CheckBox_Purple"
+        android:layout_marginLeft="25dp"/>
+    <CheckBox
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="skin temperature monitor(degrees Celsius)"
+        android:id="@+id/skin_temp_Ch_box"
+        style="@style/CheckBox_Purple"
+        android:layout_marginLeft="25dp"/>
+    <CheckBox
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="heart monitor (beats/min)"
+        android:id="@+id/Heart_Ch_box"
+        style="@style/CheckBox_Purple"
+        android:layout_marginLeft="25dp"/>
+    <CheckBox
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Speed(cm/s)"
+        android:id="@+id/speed"
+        style="@style/CheckBox_Purple"
+        android:layout_marginLeft="25dp"/>
+    <CheckBox
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="UV index level(none to Very high)"
+        android:id="@+id/UV"
+        style="@style/CheckBox_Purple"
+        android:layout_marginLeft="25dp"/>
+
+</LinearLayout>

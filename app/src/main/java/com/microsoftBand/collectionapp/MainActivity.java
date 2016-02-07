@@ -3,6 +3,8 @@ package com.microsoftBand.collectionapp;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
 import android.os.PowerManager;
 import android.support.v7.app.ActionBarActivity;
@@ -11,8 +13,14 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CursorAdapter;
 import android.widget.EditText;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+import android.widget.SimpleCursorAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -33,49 +41,99 @@ import com.microsoft.band.sensors.BandHeartRateEvent;
 import com.microsoft.band.sensors.BandHeartRateEventListener;
 import com.microsoft.band.sensors.BandSkinTemperatureEvent;
 import com.microsoft.band.sensors.BandSkinTemperatureEventListener;
+import com.microsoft.band.sensors.BandUVEvent;
+import com.microsoft.band.sensors.BandUVEventListener;
 import com.microsoft.band.sensors.SampleRate;
 import com.microsoft.band.sensors.HeartRateConsentListener;
+import com.microsoft.band.sensors.UVIndexLevel;
+
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
 
 
 public class MainActivity extends Activity implements HeartRateConsentListener{
     private BandClient client = null;
     //button to start the conncetion activity
     private Button btnStart,btnStop,btnViewTable;
-    //The text view that displays the currnet status
+    //The text view that displays the current status of the all the sensors
     private TextView AccelerometerTextView;
     private TextView GyroscopeTextView;
     private TextView speedTextView;
     private TextView temperatureTextView;
-    private TextView heartRateTextView;
-    private EditText intervalForSaving;
+    private TextView heartRateTextView,UVTextView;
+    // a dropdown list to select which activities to use as a label
     private Spinner activitiesToTrack;
-    private float accelerometerX,accelerometerY,accelerometerZ =0;
-    private float gyroscopeX,gyroscopeY,gyroscopeZ =0;
+    //database thread to store data to database
     private databaseThread dbThread;
+    //database helper creates a database helper class that control all database related functions
     public static DatabaseHelper databaseHelper;
-    private int intervalInMilliSeconds;
-    private String trackedActivity;
+    //to prevent the screen from closing
     private PowerManager pm ;
     private PowerManager.WakeLock wakeLock;
+    //the variables will store the values of each sensor
+    public float accelerometerX=0,accelerometerY=0,accelerometerZ=0,gyroscopeX=0,gyroscopeY=0, gyroscopeZ=0, temperature=0,speed=0;
+    //the variable will store the level of uv index
+    public UVIndexLevel uv =UVIndexLevel.NONE;
+    //radio group that has the sampling rates
+    private RadioGroup samplingRates;
+    //the three different sapming radio buttons
+    private RadioButton samplerate62,samplerate32,samplerate7;
+
+    public int heartRate=0;
+    public String label;
+    private long timeStamp;
+    public volatile static Queue<BandData> queueForBandData;
+    private SampleRate theBandSampleRate;
+    private CursorAdapter spinnerCursorAdapter;
+    String[] adapterCols=new String[]{"label"};
+    int[] adapterRowViews=new int[]{android.R.id.text1};
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        intervalForSaving = (EditText) findViewById(R.id.seconds);
         AccelerometerTextView = (TextView) findViewById(R.id.AccelerometerStatus);
+
         btnStart = (Button) findViewById(R.id.btnStart);
         btnStop=(Button) findViewById(R.id.btnstop);
         btnViewTable = (Button) findViewById(R.id.btnview);
-        activitiesToTrack =(Spinner) findViewById(R.id.spinner);
+        activitiesToTrack = (Spinner) findViewById(R.id.spinner);
         GyroscopeTextView = (TextView) findViewById(R.id.SecondStatusGyroscope);
         speedTextView=(TextView) findViewById(R.id.speedStatus);
         temperatureTextView = (TextView) findViewById(R.id.tempratureStatus);
         heartRateTextView = (TextView) findViewById(R.id.heartRateStatus);
+        UVTextView= (TextView) findViewById(R.id.UVStatus);
         pm=(PowerManager) getSystemService(Context.POWER_SERVICE);
         wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,"wake tag");
+
+        //queue for the data collected from the band
+        queueForBandData = new LinkedList<BandData>();
+
         //this responsible of doing the database stuff
         databaseHelper=new DatabaseHelper(this);
+        databaseHelper.getWritableDatabase();
+        theBandSampleRate = SampleRate.MS16;
+        samplingRates = (RadioGroup) findViewById(R.id.samplingRates);
+        samplerate62=(RadioButton) findViewById(R.id.ms16);
+        samplerate32 = (RadioButton) findViewById(R.id.ms32);
+        samplerate7 = (RadioButton) findViewById(R.id.ms128);
+        samplingRates.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                if (checkedId == R.id.ms16) {
+                    theBandSampleRate = SampleRate.MS16;
+                } else if (checkedId == R.id.ms32) {
+                    theBandSampleRate = SampleRate.MS32;
+                } else {
+                    theBandSampleRate = SampleRate.MS128;
+                }
+            }
+        });
+        samplerate62.setChecked(true);
+        label="walking";
 
 
 
@@ -83,17 +141,25 @@ public class MainActivity extends Activity implements HeartRateConsentListener{
             @Override
             public void onClick(View v) {
                 wakeLock.acquire();
-                Log.d("Lock","lock acquired");
+                Log.d("Lock", "lock acquired");
                 btnViewTable.setEnabled(false);
+                btnStop.setEnabled(true);
+                btnStart.setEnabled(false);
+                samplingRates.setEnabled(false);
+                samplerate62.setEnabled(false);
+                samplerate32.setEnabled(false);
+                samplerate7.setEnabled(false);
                 AccelerometerTextView.setText("");
                 //start an asynchronous class that check for the bands connection and connects to it if not connected
+
                 //get activity label
-                databaseThread.label=activitiesToTrack.getSelectedItem().toString();
-                //get seconds
-                intervalInMilliSeconds=1;
-                intervalInMilliSeconds=Integer.valueOf(intervalForSaving.getText().toString()) * 1000;
-                new SensorSubscription().execute();
-                dbThread=new databaseThread(databaseHelper,intervalInMilliSeconds,trackedActivity);
+                label=activitiesToTrack.getSelectedItem().toString();
+
+
+                     new SensorSubscription().execute();
+                dbThread=new databaseThread(databaseHelper);
+                dbThread.activateThread();
+                dbThread.start();
 
             }
         });
@@ -101,20 +167,44 @@ public class MainActivity extends Activity implements HeartRateConsentListener{
             @Override
             public void onClick(View v) {
                 dbThread.stopThread();
+
+
+
+
                 btnViewTable.setEnabled(true);
+                btnStart.setEnabled(true);
+                btnStop.setEnabled(false);
+                samplingRates.setEnabled(true);
+                samplerate62.setEnabled(true);
+                samplerate32.setEnabled(true);
+                samplerate7.setEnabled(true);
                //kill the connection
             if(client!=null) {
                 if (client.isConnected() == true) {
                     try {
-                        client.getSensorManager().unregisterAccelerometerEventListeners();
-                        client.getSensorManager().unregisterDistanceEventListeners();
-                        client.getSensorManager().unregisterGyroscopeEventListeners();
-                        client.getSensorManager().unregisterSkinTemperatureEventListeners();
-                        client.getSensorManager().unregisterHeartRateEventListeners();
+                            client.getSensorManager().unregisterAccelerometerEventListeners();
+                        if(SensorsPage.gyro_flag==true){
+                            client.getSensorManager().unregisterGyroscopeEventListeners();
+                        }
+                        if(SensorsPage.skin_flag==true){
+                            client.getSensorManager().unregisterSkinTemperatureEventListeners();
+                        }
+                        if(SensorsPage.heart_flag==true){
+                            client.getSensorManager().unregisterHeartRateEventListeners();
+                        }
+                        if(SensorsPage.uv_flag==true){
+                            client.getSensorManager().unregisterUVEventListeners();
+                        }
+
+                        if(SensorsPage.speed_flag==true) {
+                            client.getSensorManager().unregisterDistanceEventListeners();
+                        }
+
                     } catch (BandIOException e) {
                         e.printStackTrace();
                     }
                     client.disconnect();
+
 
                     if (wakeLock.isHeld()) {
                         wakeLock.release();
@@ -134,7 +224,7 @@ public class MainActivity extends Activity implements HeartRateConsentListener{
             }
         });
 
-
+        loadSpinnerData();
 
     }
 
@@ -142,6 +232,7 @@ public class MainActivity extends Activity implements HeartRateConsentListener{
     protected void onResume() {
         super.onResume();
         AccelerometerTextView.setText("");
+        loadSpinnerData();
     }
 
     @Override
@@ -164,27 +255,45 @@ public class MainActivity extends Activity implements HeartRateConsentListener{
     }
 
     private class SensorSubscription extends AsyncTask<Void, Void, Void> {
-
         @Override
         protected Void doInBackground(Void... params) {
             try {
-                //check fi  band is connected
-                if (getConnectedBandClient()) {
+            //check if  band is connected
+
+                boolean bandConnection = getConnectedBandClient();
+                if (bandConnection) {
                     appendToMainUI("Band is connected.\n");
-                    dbThread.start();
-                    client.getSensorManager().registerAccelerometerEventListener(mAccelerometerEventListener, SampleRate.MS16);
-                    client.getSensorManager().registerGyroscopeEventListener(mGyroscopeEventListener, SampleRate.MS16);
-                    client.getSensorManager().registerDistanceEventListener(mDistanceEventListener);
-                    client.getSensorManager().registerSkinTemperatureEventListener(mTemperatureEventListener);
-                    if(client.getSensorManager().getCurrentHeartRateConsent() != UserConsent.GRANTED) {
-                        // user has not consented, request it
-                        // the calling class is both an Activity and implements
-                        // HeartRateConsentListener
-                        client.getSensorManager().requestHeartRateConsent(MainActivity.this, MainActivity.this);
-                    }else{
-                        client.getSensorManager().registerHeartRateEventListener(mHeartRateEventListner);
+
+                    client.getSensorManager().registerAccelerometerEventListener(mAccelerometerEventListener, theBandSampleRate);
+
+                    if(SensorsPage.gyro_flag==true){
+                        client.getSensorManager().registerGyroscopeEventListener(mGyroscopeEventListener, theBandSampleRate);
                     }
-//
+
+
+                    if(SensorsPage.skin_flag==true){
+                        client.getSensorManager().registerSkinTemperatureEventListener(mTemperatureEventListener);
+                    }
+                    if(SensorsPage.uv_flag==true){
+                        client.getSensorManager().registerUVEventListener(mUVEventListner);
+                    }
+
+                    if(SensorsPage.speed_flag){
+                        client.getSensorManager().registerDistanceEventListener(mDistanceEventListener);
+                    }
+
+                    if(SensorsPage.heart_flag==true) {
+                        if (client.getSensorManager().getCurrentHeartRateConsent() != UserConsent.GRANTED) {
+                            // user has not consented, request it
+                            // the calling class is both an Activity and implements
+                            // HeartRateConsentListener
+                            client.getSensorManager().requestHeartRateConsent(MainActivity.this, MainActivity.this);
+                        } else {
+                            client.getSensorManager().registerHeartRateEventListener(mHeartRateEventListner);
+                        }
+                    }
+
+
                 } else {
                     appendToMainUI("Band isn't connected. Please make sure bluetooth is on and the band is in range.\n");
                 }
@@ -203,7 +312,7 @@ public class MainActivity extends Activity implements HeartRateConsentListener{
                 }
                 appendToMainUI(exceptionMessage);
 
-            } catch (Exception e) {
+            } catch (InterruptedException e) {
                 appendToMainUI(e.getMessage());
             }
             return null;
@@ -268,6 +377,14 @@ public class MainActivity extends Activity implements HeartRateConsentListener{
             }
         });
     }
+    private void appendToUV(final String value) {
+        this.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                UVTextView.setText(value);
+            }
+        });
+    }
 
     private void appendToHeartStatus(final String value) {
         this.runOnUiThread(new Runnable() {
@@ -286,9 +403,14 @@ public class MainActivity extends Activity implements HeartRateConsentListener{
                 appendToMainUI(String.format(" X = %.3f g\n Y = %.3f g\n Z = %.3f g", event.getAccelerationX(),
                         event.getAccelerationY(), event.getAccelerationZ()));
                 //update variables in databaseThread class
-                databaseThread.accelerometerX=event.getAccelerationX();
-                databaseThread.accelerometerY=event.getAccelerationY();
-                databaseThread.accelerometerZ=event.getAccelerationZ();
+               accelerometerX=event.getAccelerationX();
+                accelerometerY=event.getAccelerationY();
+               accelerometerZ=event.getAccelerationZ();
+                timeStamp  =event.getTimestamp();
+
+                BandData bandData = new BandData(accelerometerX, accelerometerY,accelerometerZ,gyroscopeX,gyroscopeY, gyroscopeZ,speed,temperature,heartRate,uv,label,timeStamp);
+                Log.d("Lable",label);
+                queueForBandData.add(bandData);
 
             }
         }
@@ -297,13 +419,13 @@ public class MainActivity extends Activity implements HeartRateConsentListener{
     private BandGyroscopeEventListener mGyroscopeEventListener = new BandGyroscopeEventListener() {
         @Override
         public void onBandGyroscopeChanged(BandGyroscopeEvent bandGyroscopeEvent) {
-            if(bandGyroscopeEvent != null){
+            if(bandGyroscopeEvent != null && SensorsPage.gyro_flag==true){
                 appendToGyroscopeUI(String.format(" X Gyroscope = %.3f deg/s  \n YGyroscope = %.3f deg/s\n ZGyroscope = %.3f deg/s", bandGyroscopeEvent.getAngularVelocityX(),
                         bandGyroscopeEvent.getAngularVelocityY(), bandGyroscopeEvent.getAngularVelocityZ()));
                 //update variables in databaseThread class
-                databaseThread.gyroscopeX=bandGyroscopeEvent.getAngularVelocityX();
-                databaseThread.gyroscopeY= bandGyroscopeEvent.getAngularVelocityY();
-                databaseThread.gyroscopeZ=bandGyroscopeEvent.getAngularVelocityZ();
+               gyroscopeX=bandGyroscopeEvent.getAngularVelocityX();
+                gyroscopeY= bandGyroscopeEvent.getAngularVelocityY();
+                gyroscopeZ=bandGyroscopeEvent.getAngularVelocityZ();
             }
         }
     };
@@ -313,11 +435,8 @@ public class MainActivity extends Activity implements HeartRateConsentListener{
         public void onBandDistanceChanged(BandDistanceEvent bandDistanceEvent) {
            if(bandDistanceEvent != null){
                //change speed unit from cm/s to m/s
-               float speed = bandDistanceEvent.getSpeed()/100;
-               appendToSpeedUI(String.format("speed= %.3f m/s ", speed));
-               //update variables in databaseThread class
-               databaseThread.speed = speed;
-
+                speed = bandDistanceEvent.getSpeed();
+               appendToSpeedUI(String.format("speed= %.3f cm/s ", speed));
            }
         }
     };
@@ -325,24 +444,35 @@ public class MainActivity extends Activity implements HeartRateConsentListener{
     private BandSkinTemperatureEventListener mTemperatureEventListener = new BandSkinTemperatureEventListener() {
         @Override
         public void onBandSkinTemperatureChanged(BandSkinTemperatureEvent bandSkinTemperatureEvent) {
-            if(bandSkinTemperatureEvent != null){
+            if(bandSkinTemperatureEvent != null && SensorsPage.skin_flag==true){
                 appendToTemperature(String.format("skin temprature= %.3f Celsius ", bandSkinTemperatureEvent.getTemperature()));
                 //update variables in databaseThread class
-                databaseThread.temprature=bandSkinTemperatureEvent.getTemperature();
+                temperature=bandSkinTemperatureEvent.getTemperature();
             }
         }
     };
     private BandHeartRateEventListener mHeartRateEventListner = new BandHeartRateEventListener() {
         @Override
         public void onBandHeartRateChanged(BandHeartRateEvent bandHeartRateEvent) {
-            if(bandHeartRateEvent != null){
+            if(bandHeartRateEvent != null && SensorsPage.heart_flag==true){
                 appendToHeartStatus(String.format("Heart Rate= %03d", bandHeartRateEvent.getHeartRate()));
                 //update variables in databaseThread class
-                databaseThread.heartRate=bandHeartRateEvent.getHeartRate();
+                heartRate=bandHeartRateEvent.getHeartRate();
             }
         }
     };
 
+    //uv section
+    private BandUVEventListener mUVEventListner = new BandUVEventListener() {
+        @Override
+        public void onBandUVChanged(BandUVEvent bandUVEvent) {
+            if(bandUVEvent != null && SensorsPage.uv_flag==true){
+                appendToUV(String.format("UV= %s ", bandUVEvent.getUVIndexLevel()));
+                //update variables in databaseThread class
+                uv=bandUVEvent.getUVIndexLevel();
+            }
+        }
+    };
 
     @Override
     public void userAccepted(boolean consentGiven) {
@@ -394,4 +524,17 @@ public class MainActivity extends Activity implements HeartRateConsentListener{
         //await() stops the thread till  the connect is finshed
         return ConnectionState.CONNECTED == client.connect().await();
     }
+
+    private void loadSpinnerData() {
+        // Spinner Drop down elements
+        List<String> labels = databaseHelper.getLabels();
+        // Creating adapter for spinner
+        ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, labels);
+        // Drop down layout style - list view with radio button
+        dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        // attaching data adapter to spinner
+        activitiesToTrack.setAdapter(dataAdapter);
+    }
 }
+
+//todo add uv to database

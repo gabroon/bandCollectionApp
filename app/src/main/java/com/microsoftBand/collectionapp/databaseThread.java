@@ -3,6 +3,8 @@ package com.microsoftBand.collectionapp;
 import android.content.Context;
 import android.database.sqlite.SQLiteCantOpenDatabaseException;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.Debug;
+import android.util.Log;
 //import android.util.Log;
 import java.util.Calendar;
 
@@ -10,70 +12,33 @@ import java.util.Calendar;
  * Created by mohamed on 09/06/2015.
  */
 public class databaseThread extends Thread {
-    private Long milliSeconds ;
-    public volatile static float accelerometerX,accelerometerY,accelerometerZ,gyroscopeX,gyroscopeY,gyroscopeZ,temprature,speed=0;
-    public volatile  static int heartRate=0;
-    public volatile static String label;
-//    public volatile static String time;
+    private Calendar c =Calendar.getInstance();
+    private int day = c.get(Calendar.DAY_OF_MONTH);
+    private int month =(c.get(Calendar.MONTH))+1;
+    private int year = c.get(Calendar.YEAR);
+    private String date=day+"-"+month+"-"+year;
     private SQLiteDatabase db;
-    private Context context;
-    private Boolean runThread=true;
+    private volatile boolean runThread=false;
     public static DatabaseHelper databaseHelper;
-    private String activityToTrack;
-    public databaseThread(DatabaseHelper databaseHelper,int Seconds,String activityToTrack){
-        this.databaseHelper=databaseHelper;
-        milliSeconds= Long.valueOf(Seconds);
-        this.activityToTrack=activityToTrack;
-//        createDatabaseAndCheck();
-//        this.context=context;
-//        db.openOrCreateDatabase("data",null, null);
-//        db.execSQL("CREATE TABLE IF NOT EXISTS bandData(ROWID INTEGER PRIMARY KEY ,accelerometerX REAL,accelerometerY REAL,accelerometerZ REAL, gyroscopeX REAL,gyroscopeY REAL,gyroscopeZ REAL,temprature REAL, heart_rate INTEGER,speed REAL);");
+    public databaseThread(DatabaseHelper databaseHelper){
+    this.databaseHelper=databaseHelper;
     }
+
     @Override
     public void run() {
-//        super.run();
-//        int i = 0;
-        try {
-            sleep(milliSeconds);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        while(runThread==true ){
 
-//            Log.v("ACCELEROMTER", "x=" + accelerometerX + " y=" + accelerometerY + " z=" + accelerometerZ + " ,iretation"+i );
-//            Log.v("GYRSCOPE", "x=" + gyroscopeX + " y=" + gyroscopeY + " z=" + gyroscopeZ + " ,iretation"+i );
-//            Log.v("Heart rate",  heartRate + " ,iretation"+i );
-//            Log.v("temprature",  temprature + " ,iretation"+i );
-//            Log.v("speed", speed + " ,iretation" + i);
+        while(runThread){
 
 
+           if(MainActivity.queueForBandData != null){
+              // Log.d("run thread",String.valueOf(runThread));
+               if(MainActivity.queueForBandData.size() != 0){
 
-//            int sec = c.get(Calendar.SECOND);
-//            int minute =c.get(Calendar.MINUTE);
-//            int hour =c.get(Calendar.HOUR_OF_DAY);
-//            String time = hour+":"+minute+":"+sec;
-            //get time in milliseconds
-            Calendar c =Calendar.getInstance();
-            int day = c.get(Calendar.DAY_OF_MONTH);
-            int month =c.get(Calendar.MONTH);
-            int year = c.get(Calendar.YEAR);
-            String date=day+"-"+month+"-"+year;
-            Long timeLN =System.currentTimeMillis();
-            String time = timeLN.toString();
-            databaseHelper.insertInformation(databaseHelper,accelerometerX,accelerometerY,accelerometerZ , gyroscopeX ,gyroscopeY ,gyroscopeZ,speed ,temprature,heartRate,time,date,label);
+                   BandData bandData =  MainActivity.queueForBandData.remove();
+                   databaseHelper.insertInformation(databaseHelper,bandData.getAcc_x(),bandData.getAcc_y(),bandData.getAcc_z() , bandData.getGyr_x() ,bandData.getGyr_y() ,bandData.getGyr_z(),bandData.getSpeed() ,bandData.getTemp(),bandData.getHeartRate(),String.valueOf(bandData.getUvIndexLevel()),String.valueOf(bandData.getTimeStamp()),date,bandData.getLabel());
+               }
+           }
 
-            //db.execSQL("INSERT INTO bandData(accelerometerX,accelerometerY,accelerometerZ , gyroscopeX ,gyroscopeY ,gyroscopeZ ,temprature , heart_rate ,speed ) VALUES("+accelerometerX+","+accelerometerY+","+accelerometerZ+","+gyroscopeX+","+gyroscopeY+","+gyroscopeZ+","+temprature+","+heartRate+","+speed+");");
-//            i++;
-//            try {
-//                sleep(1);
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
-            try {
-                sleep(3);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
         }
     }
     /*
@@ -89,11 +54,13 @@ public class databaseThread extends Thread {
 
     }
     public  void activateThread(){
-        runThread=false;
+        runThread=true;
     }
 
-    public void stopThread(){
+    public  void stopThread(){
+
         runThread=false;
+        Log.d("Stop rthread",String.valueOf(runThread));
     }
 
 }

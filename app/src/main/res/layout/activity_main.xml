@@ -2,47 +2,114 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_margin="15dp"
+    android:layout_margin="0dp"
     android:orientation="vertical" >
 
-    <TextView
-        android:id="@+id/txtStep"
+    <!--<TextView-->
+        <!--android:id="@+id/txtStep"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:text="@string/steps" />-->
+<LinearLayout
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:id="@+id/buttonsOnTop"
+    android:weightSum="1">
+    <!--android:layout_below="@id/txtStep"-->
+    <Button
+        android:id="@+id/btnStart"
+        android:layout_width="0px"
+        android:layout_height="wrap_content"
+        android:text="@string/start"
+        android:layout_gravity="left"
+        android:layout_weight="0.5"
+        style="@style/Button_Purple"
+
+
+        />
+    <Button
+        android:id="@+id/btnstop"
+        android:layout_width="0px"
+        android:layout_height="wrap_content"
+        android:text="@string/stop"
+        android:layout_gravity="right"
+        android:layout_weight="0.5"
+        style="@style/Button_Purple"
+        android:enabled="false"
+
+        />
+</LinearLayout>
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/steps" />
-
-
+        android:id="@+id/options"
+        android:layout_below="@id/buttonsOnTop"
+        android:weightSum="1"
+        android:orientation="vertical"
+        android:paddingTop="10dp"
+        android:layout_margin="15dp">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        >
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Choose label"
+            android:paddingTop="5dp"
+            android:textSize="15dp"/>
     <Spinner
         android:layout_width="100dp"
         android:layout_height="40dp"
-        android:layout_below="@id/txtStep"
-        android:layout_alignParentRight="true"
+        android:layout_alignParentLeft="true"
         android:id="@+id/spinner"
-        android:entries="@array/activities"
-        android:prompt="@string/activity_prompt"></Spinner>
-    <EditText
-        android:layout_width="130dp"
-        android:layout_height="40dp"
-        android:layout_below="@id/txtStep"
-        android:layout_toLeftOf="@id/spinner"
-        android:layout_marginRight="5dp"
-        android:id="@+id/seconds"
-        android:inputType="number"
-        android:hint="Seconds "
-        android:text="2"
-        />
-
-    <Button
-        android:id="@+id/btnStart"
+        android:prompt="@string/activity_prompt"
+        android:layout_weight="0.3"
+        android:layout_marginBottom="10dp"
+        android:layout_gravity="center"
+        ></Spinner>
+    </LinearLayout>
+    <RadioGroup
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/start"
-        android:layout_below="@id/seconds"/>
+        android:orientation="horizontal"
+        android:layout_weight="0.7"
+        android:baselineAligned="true"
+        android:id="@+id/samplingRates"
+        >
+        <RadioButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="62.5 Hz"
+            android:id="@+id/ms16"
+            style="@style/RadioButton_Purple"
+            android:layout_marginRight="10dp"
+            android:layout_gravity="center"/>
+        <RadioButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="31.25 Hz"
+            android:id="@+id/ms32"
+            style="@style/RadioButton_Purple"
+            android:layout_marginRight="10dp"
+            android:layout_gravity="center"/>
+        <RadioButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="7.81 Hz"
+            android:id="@+id/ms128"
+            style="@style/RadioButton_Purple"
+            android:layout_gravity="center"/>
+    </RadioGroup>
+    </LinearLayout>
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:layout_below="@id/btnStart">
+        android:layout_below="@id/options"
+        android:layout_marginTop="10dp">
     <TextView
         android:id="@+id/speedStatus"
         android:layout_width="match_parent"
@@ -69,6 +136,11 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="" />
+        <TextView
+            android:id="@+id/UVStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="" />
     </LinearLayout>
     <Button
         android:id="@+id/btnview"
@@ -77,15 +149,8 @@
         android:text="@string/view"
         android:layout_gravity="bottom"
         android:layout_alignParentBottom="true"
-        />
-    <Button
-        android:id="@+id/btnstop"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/stop"
-        android:layout_gravity="bottom"
-        android:layout_above="@id/btnview"
-        />
+        style="@style/Button_Purple" />
+
 
 </RelativeLayout>
 

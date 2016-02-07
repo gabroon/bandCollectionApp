@@ -1,6 +1,5 @@
 <resources>
-    <string name="app_name">Band Data Collection</string>
-
+    <string name="app_name">MS band data collector</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
 
@@ -13,8 +12,14 @@
         6. Data from the band should be displayed.\n</string>
     <string name="start">Start</string>
     <string name="stop">Stop recordind data</string>
-    <string name="view">View stored data</string>
+    <string name="view">Options</string>
     <string name="activity_prompt">Choose</string>
+    <string name="delete_prompt_message">Are you sure you want to delete all data from the database?</string>
+    <string name="delete_prompt_title">Delete All Data</string>
+    <string name="delete_ok">yes</string>
+    <string name="delete_cancel">no</string>
+    <string name="description">The MS band data collector was developed to store values from the band\'s sensors at different sampling rates. The following sensors are utilized to collect data from the band: the accelerometer, the gyroscope, the heart monitor and the skin temperature monitor. The stored values can be exported to a csv file saved locally on the mobile device for further processing.</string>
+
     <string-array name="activities">
         <item>cycling</item>
         <item>walking</item>
@@ -24,6 +29,5 @@
         <item>football</item>
         <item>running indoors</item>
         <item>on laptop</item>
-        <item>praying</item>
     </string-array>
 </resources>
