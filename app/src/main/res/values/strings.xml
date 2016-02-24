@@ -11,7 +11,7 @@
         5. Press the Start button\n
         6. Data from the band should be displayed.\n</string>
     <string name="start">Start</string>
-    <string name="stop">Stop recordind data</string>
+    <string name="stop">Stop recording data</string>
     <string name="view">Options</string>
     <string name="activity_prompt">Choose</string>
     <string name="delete_prompt_message">Are you sure you want to delete all data from the database?</string>
@@ -19,7 +19,8 @@
     <string name="delete_ok">yes</string>
     <string name="delete_cancel">no</string>
     <string name="description">The MS band data collector was developed to store values from the band\'s sensors at different sampling rates. The following sensors are utilized to collect data from the band: the accelerometer, the gyroscope, the heart monitor and the skin temperature monitor. The stored values can be exported to a csv file saved locally on the mobile device for further processing.</string>
-
+    <string name="drawer_open">Open navigation drawer</string>
+    <string name="drawer_close">Close navigation drawer</string>
     <string-array name="activities">
         <item>cycling</item>
         <item>walking</item>

@@ -3,24 +3,16 @@ package com.microsoftBand.collectionapp;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
-import android.os.PowerManager;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.os.PowerManager;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CursorAdapter;
-import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
-import android.widget.SimpleCursorAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -43,13 +35,13 @@ import com.microsoft.band.sensors.BandSkinTemperatureEvent;
 import com.microsoft.band.sensors.BandSkinTemperatureEventListener;
 import com.microsoft.band.sensors.BandUVEvent;
 import com.microsoft.band.sensors.BandUVEventListener;
-import com.microsoft.band.sensors.SampleRate;
 import com.microsoft.band.sensors.HeartRateConsentListener;
+import com.microsoft.band.sensors.SampleRate;
 import com.microsoft.band.sensors.UVIndexLevel;
 
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 
 public class MainActivity extends Activity implements HeartRateConsentListener{
@@ -83,20 +75,28 @@ public class MainActivity extends Activity implements HeartRateConsentListener{
     public int heartRate=0;
     public String label;
     private long timeStamp;
-    public volatile static Queue<BandData> queueForBandData;
+    public volatile static BlockingQueue<BandData> queueForBandData;
     private SampleRate theBandSampleRate;
     private CursorAdapter spinnerCursorAdapter;
     String[] adapterCols=new String[]{"label"};
     int[] adapterRowViews=new int[]{android.R.id.text1};
+    private String[] menuList;
 
+//    private DrawerLayout mDrawerLayout;
+//    private ListView mDrawerList;
+//    private ArrayAdapter<String> mAdapter;
+//    private ActionBarDrawerToggle mDrawerToggle;
+//    private String mActivityTitle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        AccelerometerTextView = (TextView) findViewById(R.id.AccelerometerStatus);
 
+
+
+        AccelerometerTextView = (TextView) findViewById(R.id.AccelerometerStatus);
         btnStart = (Button) findViewById(R.id.btnStart);
         btnStop=(Button) findViewById(R.id.btnstop);
         btnViewTable = (Button) findViewById(R.id.btnview);
@@ -110,7 +110,7 @@ public class MainActivity extends Activity implements HeartRateConsentListener{
         wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,"wake tag");
 
         //queue for the data collected from the band
-        queueForBandData = new LinkedList<BandData>();
+        queueForBandData = new LinkedBlockingQueue<BandData>();
 
         //this responsible of doing the database stuff
         databaseHelper=new DatabaseHelper(this);
@@ -135,8 +135,15 @@ public class MainActivity extends Activity implements HeartRateConsentListener{
         samplerate62.setChecked(true);
         label="walking";
 
+//        mDrawerList = (ListView)findViewById(R.id.left_drawer);
+//        mDrawerLayout = (DrawerLayout)findViewById(R.id.drawer_layout);
+//        mActivityTitle = getTitle().toString();
 
+//        addDrawerItems();
+//        setupDrawer();
 
+//        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+//        getSupportActionBar().setHomeButtonEnabled(true);
         btnStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -158,8 +165,6 @@ public class MainActivity extends Activity implements HeartRateConsentListener{
 
                      new SensorSubscription().execute();
                 dbThread=new databaseThread(databaseHelper);
-                dbThread.activateThread();
-                dbThread.start();
 
             }
         });
@@ -167,10 +172,6 @@ public class MainActivity extends Activity implements HeartRateConsentListener{
             @Override
             public void onClick(View v) {
                 dbThread.stopThread();
-
-
-
-
                 btnViewTable.setEnabled(true);
                 btnStart.setEnabled(true);
                 btnStop.setEnabled(false);
@@ -317,6 +318,19 @@ public class MainActivity extends Activity implements HeartRateConsentListener{
             }
             return null;
         }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            dbThread.activateThread();
+            if(!dbThread.isAlive()){
+                dbThread.start();
+            }
+
+        }
+
+
+
+
     }
 
     /**
@@ -535,6 +549,75 @@ public class MainActivity extends Activity implements HeartRateConsentListener{
         // attaching data adapter to spinner
         activitiesToTrack.setAdapter(dataAdapter);
     }
+
+
+//    private void addDrawerItems() {
+//        String[] osArray = { "Export data", "Sensors", "Manage labels", "About"};
+//        mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, osArray);
+//        mDrawerList.setAdapter(mAdapter);
+//    }
+//
+//    private void setupDrawer() {
+//        mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, R.string.drawer_open, R.string.drawer_close) {
+//
+//            /** Called when a drawer has settled in a completely open state. */
+//            public void onDrawerOpened(View drawerView) {
+//                super.onDrawerOpened(drawerView);
+//                getSupportActionBar().setTitle("Menu");
+//                invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
+//            }
+//
+//            /** Called when a drawer has settled in a completely closed state. */
+//            public void onDrawerClosed(View view) {
+//                super.onDrawerClosed(view);
+//                getSupportActionBar().setTitle(mActivityTitle);
+//                invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
+//            }
+//        };
+//
+//        mDrawerToggle.setDrawerIndicatorEnabled(true);
+//        mDrawerLayout.setDrawerListener(mDrawerToggle);
+//    }
+//
+//    @Override
+//    protected void onPostCreate(Bundle savedInstanceState) {
+//        super.onPostCreate(savedInstanceState);
+//        // Sync the toggle state after onRestoreInstanceState has occurred.
+//        mDrawerToggle.syncState();
+//    }
+//
+//    @Override
+//    public void onConfigurationChanged(Configuration newConfig) {
+//        super.onConfigurationChanged(newConfig);
+//        mDrawerToggle.onConfigurationChanged(newConfig);
+//    }
+//
+//    @Override
+//    public boolean onCreateOptionsMenu(Menu menu) {
+//        // Inflate the menu; this adds items to the action bar if it is present.
+//        getMenuInflater().inflate(R.menu.menu_main, menu);
+//        return true;
+//    }
+//
+//    @Override
+//    public boolean onOptionsItemSelected(MenuItem item) {
+//        // Handle action bar item clicks here. The action bar will
+//        // automatically handle clicks on the Home/Up button, so long
+//        // as you specify a parent activity in AndroidManifest.xml.
+//        int id = item.getItemId();
+//
+//        //noinspection SimplifiableIfStatement
+//        if (id == R.id.action_settings) {
+//            return true;
+//        }
+//
+//        // Activate the navigation drawer toggle
+//        if (mDrawerToggle.onOptionsItemSelected(item)) {
+//            return true;
+//        }
+//
+//        return super.onOptionsItemSelected(item);
+//    }
 }
 
 //todo add uv to database

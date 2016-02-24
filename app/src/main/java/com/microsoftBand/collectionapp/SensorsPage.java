@@ -11,7 +11,7 @@ import android.widget.CompoundButton;
  */
 public class SensorsPage extends Activity {
     private CheckBox acc_checkbox,gyr_checkbox,heart_checkbox,skintemp_checkbox,uv_checkbox,speed_checkbox;
-    public static boolean gyro_flag=true,heart_flag=true,skin_flag=true,acc_flag=true,uv_flag=true,speed_flag=true;
+    public volatile static boolean gyro_flag=true,heart_flag=true,skin_flag=true,acc_flag=true,uv_flag=true,speed_flag=true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
